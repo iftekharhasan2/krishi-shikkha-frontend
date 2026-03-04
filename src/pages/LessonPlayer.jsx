@@ -15,10 +15,12 @@ export default function LessonPlayer() {
   const { lessonId } = useParams()
   const { showToast } = useToast()
   // Append JWT token to media URLs so browser <video>/<a> can authenticate
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
   const getAuthUrl = (url) => {
     if (!url) return url
     const token = localStorage.getItem('token')
-    return token ? `${url}?token=${encodeURIComponent(token)}` : url
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`
+    return token ? `${fullUrl}?token=${encodeURIComponent(token)}` : fullUrl
   }
   const [lesson, setLesson] = useState(null)
   const [lessons, setLessons] = useState([])
