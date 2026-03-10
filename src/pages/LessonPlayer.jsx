@@ -14,14 +14,17 @@ function formatDuration(sec) {
 export default function LessonPlayer() {
   const { lessonId } = useParams()
   const { showToast } = useToast()
-  // Append JWT token to media URLs so browser <video>/<a> can authenticate
   const API_BASE = import.meta.env.VITE_API_BASE_URL || ''
+
+  // Cloudinary URLs are pre-signed — never append a token to them
   const getAuthUrl = (url) => {
     if (!url) return url
+    if (url.startsWith('https://res.cloudinary.com')) return url
     const token = localStorage.getItem('token')
     const fullUrl = url.startsWith('http') ? url : `${API_BASE}${url}`
     return token ? `${fullUrl}?token=${encodeURIComponent(token)}` : fullUrl
   }
+
   const [lesson, setLesson] = useState(null)
   const [lessons, setLessons] = useState([])
   const [loading, setLoading] = useState(true)
@@ -80,7 +83,12 @@ export default function LessonPlayer() {
       <div style={styles.main}>
         <div style={styles.videoWrap}>
           {lesson.has_video ? (
-            <video controlsList="nodownload" src={getAuthUrl(lesson.video_url)} controls style={styles.video} />
+            <video
+              controlsList="nodownload"
+              src={getAuthUrl(lesson.video_url)}
+              controls
+              style={styles.video}
+            />
           ) : (
             <div style={styles.noVideo}>
               <span style={{ fontSize: 48 }}>🎬</span>
@@ -96,9 +104,11 @@ export default function LessonPlayer() {
               {lesson.description && <p style={styles.lessonDesc}>{lesson.description}</p>}
             </div>
             {lesson.has_note && (
-              <a 
-                href={getAuthUrl(`/api/lessons/${lessonId}/note`)}
+              <a
+                href={lesson.note_url}
                 download={lesson.note_filename || 'নোট'}
+                target="_blank"
+                rel="noreferrer"
                 style={styles.downloadBtn}
               >
                 <Download size={15} /> 📄 {lesson.note_filename || 'নোট ডাউনলোড করুন'}
